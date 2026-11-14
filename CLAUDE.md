@@ -40,6 +40,7 @@ Reference these files in the `knowledge/` directory for detailed guidance:
 - `SPECIAL_CATEGORIES.md` - Decaf extraction adjustments, blend temperature strategies, archetype quick-reference
 - `grinders/SETTE_270.md` - Sette 270 adjustment system, espresso range table, quick adjustment guide
 - `grinders/DF64V.md` - DF64V Gen-3 adjustment system, espresso RPM range, quick-adjust guide (SSP Cast Lab Sweet V3 Red Speed burrs)
+- `grinders/VARIA_VS4.md` - Varia VS4 absolute-dial stepless collar, 150–300 RPM stepped speed, espresso range and quick-adjust guide (stock 53 mm conical burrs)
   _(grinder selection is governed by the Active Grinder field parsing contract in the Data Architecture section below)_
 - `automatic-pro/` - Automatic Pro firmware built-in profile: 5-phase vIT3 architecture, dose scaling, and working profile JSONs (16g, 18g, 20g, 22g)
 - `MILK_AND_DRINKS.md` - Steaming technique, temperature thresholds, drink specs, single-boiler workflow
@@ -70,6 +71,7 @@ These files in the project root grow from user interactions:
 2. **Quick-tier map** — match by case-insensitive substring, first match wins:
    - `sette` → `knowledge/grinders/SETTE_270.md`
    - `df64v` → `knowledge/grinders/DF64V.md`
+   - `vs4` → `knowledge/grinders/VARIA_VS4.md`
 
 3. **Deep-tier map** — match by case-insensitive substring, first match wins (explicit filenames only; do NOT interpolate `<GRINDER>_REFERENCE.md`):
    - `sette` → `knowledge/reference/SETTE_270_REFERENCE.md`
