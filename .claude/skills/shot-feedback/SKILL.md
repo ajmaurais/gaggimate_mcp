@@ -110,7 +110,7 @@ The skill does NOT carry its own copy of the guardrail wording — it routes to 
 
 When the gate is ON and the user states an RPM for this session that **differs** from the current `Operating RPM` read from `user-setup.md` (a single read — do NOT scan prior grind-map rows), do both of the following:
 1. **Warn and re-anchor.** Explain that RPM is a coarse lever that shifts the grind distribution, so the old grind setting no longer maps to the same shot. Recommend **re-dialing grind to restore the target shot time** — let the shot timer tell you which way — rather than carrying the old grind number forward. (Do not restate RPM range numbers; for the why, route to `knowledge/grinders/DF64V.md`.)
-2. **Update (or create) the Operating RPM field.** Write the new stated RPM into `user-setup.md`'s `Operating RPM` field — **creating the row if it is absent** (per Task 4's documented contract) — mirroring how the Active Coffee section is updated in `/new-coffee`. **Symlink-resolve before writing:** `user-setup.md` is a symlink file into the private data repo and the Edit/Write tool refuses to write through it. Run `readlink user-setup.md`; if it resolves, Read AND Edit the resolved absolute target (e.g. `/Users/charlie.hall/Workspaces/gaggimate-barista-data/user-setup.md`); if `readlink` returns nothing (regular file — no private repo configured), operate on the literal path. The Read-before-edit and the Edit must target the SAME resolved path. This write must reach the Step 4e `.data-repo-path` commit/push **even when no rating is recorded** (a mid-bag RPM report may arrive on an unrated shot), so perform the Step 4e commit path regardless of whether a rating was logged.
+2. **Update (or create) the Operating RPM field.** Write the new stated RPM into `user-setup.md`'s `Operating RPM` field — **creating the row if it is absent** (per Task 4's documented contract) — mirroring how the Active Coffee section is updated in `/new-coffee`. **Symlink-resolve before writing:** `user-setup.md` is a symlink file into the private data repo and the Edit/Write tool refuses to write through it. Run `readlink user-setup.md`; if it resolves, Read AND Edit the resolved absolute target (e.g. `/Users/charlie.hall/Workspaces/gaggimate-barista-data/user-setup.md`); if `readlink` returns nothing (regular file — no private repo configured), operate on the literal path. The Read-before-edit and the Edit must target the SAME resolved path. This write must reach the Step 4e private-repo changes report **even when no rating is recorded** (a mid-bag RPM report may arrive on an unrated shot), so perform Step 4e regardless of whether a rating was logged.
 
 When the stated RPM matches the current `Operating RPM` (or no RPM is stated), do nothing here — no warning, no update.
 
@@ -183,16 +183,12 @@ manage_shot_notes(shot_id, action="update", rating=X, balance_taste="...", notes
 
 If a profile was modified based on feedback, overwrite the JSON file in the coffee directory.
 
-#### 4e. Private Repo Commit
+#### 4e. Private Repo Changes
 
 1. Read `.data-repo-path` at the project root.
    - If absent: skip silently (user has no private repo — this is expected for new setups).
    - If present: proceed.
-2. Run as separate Bash calls (no chaining, no `git -C`), substituting `{private_repo}` with the path from `.data-repo-path`:
-   - `git --git-dir={private_repo}/.git --work-tree={private_repo} add -A`
-   - `git --git-dir={private_repo}/.git --work-tree={private_repo} commit -m "feedback: shot {shot_id} — {rating}★ {balance}"`
-   - `git --git-dir={private_repo}/.git --work-tree={private_repo} push`
-3. If push fails: inform the user — "Private repo push failed — changes saved locally. Run `git push` manually in `{private_repo_path}` when credentials are available."
+2. **Do NOT commit or push** (see CLAUDE.md "Git rules"). Tell the user: "Changes saved to `{private_repo}` (uncommitted). Suggested commit message: `feedback: shot {shot_id} — {rating}★ {balance}` — say the word if you want me to commit." Only commit if the user explicitly says to, using separate Bash calls (no chaining, no `git -C`): `git --git-dir={private_repo}/.git --work-tree={private_repo} add -A`, then `git --git-dir={private_repo}/.git --work-tree={private_repo} commit -m "..."`. Never push — the user always pushes themselves.
 
 ### 5. SUGGEST Next Steps
 
