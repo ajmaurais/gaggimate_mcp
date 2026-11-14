@@ -8,7 +8,7 @@ import traceback
 from typing import Optional, Union
 from pydantic import ValidationError
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from gaggimate_mcp.config import GaggimateConfig
 from gaggimate_mcp.logging_config import setup_logging, get_logger
 from gaggimate_mcp.api.websocket import GaggimateWebSocketClient
@@ -31,8 +31,8 @@ config = GaggimateConfig()
 setup_logging(log_level=config.log_level)
 logger = get_logger(__name__)
 
-# Create FastMCP server
-mcp = FastMCP("gaggimate-mcp")
+# Create MCP server
+mcp = MCPServer("gaggimate-mcp")
 
 # Initialize clients and storage
 ws_client = GaggimateWebSocketClient(config)

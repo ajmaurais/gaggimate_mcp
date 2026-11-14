@@ -143,7 +143,7 @@ async def test_tool_passes_bean_type_to_both_sinks(tmp_path, monkeypatch):
     importlib.reload(server)
 
     # --- (a) sync_to_device=False: only local backup is written ---
-    # @mcp.tool() registers the function with the FastMCP instance but
+    # @mcp.tool() registers the function with the MCPServer instance but
     # leaves the original function callable directly — call it as a normal
     # async function rather than going through the MCP transport.
     manage = server.manage_shot_notes
