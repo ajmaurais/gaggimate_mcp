@@ -14,7 +14,7 @@ The Node harness under `mcp/tests/fixtures/shots/harness/` regenerates the `.ref
 
 > `package.json` declares `"engines": {"node": ">=20.17.0"}` but `engines` is **advisory** in npm — npm prints a warning when the constraint is unmet but does not refuse to run. Self-check with `node --version` before running the harness; if you see the `Unexpected token 'export'` error above, your Node is too old.
 
-The MCP server runtime itself (Python 3.13+, `uv`) does not depend on Node — Node is only needed when capturing or refreshing fixtures.
+The MCP server runtime itself (Python 3.13+, project-root `./venv`) does not depend on Node — Node is only needed when capturing or refreshing fixtures.
 
 ## Re-syncing shot-analyzer on firmware upgrades
 
@@ -25,8 +25,8 @@ When upstream gaggimate releases a new firmware tag (e.g. `v1.9.0`) and you need
 3. **Diff and re-vendor the JS sources.** Compare the two upstream files against `mcp/tests/fixtures/shots/harness/analyzer-service.v1.8.0.js` and `mcp/tests/fixtures/shots/harness/parse-binary-shot.v1.8.0.js`; copy the new versions over with the new version embedded in the filename (e.g. `analyzer-service.v1.9.0.js`, `parse-binary-shot.v1.9.0.js`). Delete the previous-version files in the same commit. Update the `import` statements at the top of `capture.js` to point at the new filenames.
 4. **Update `HARNESS_SETTINGS` in `capture.js`** if the gaggimate web UI defaults at `web/src/pages/ShotAnalyzer/index.jsx:111-112` changed between versions. The committed defaults (`scaleDelayMs: 200`, `sensorDelayMs: 200`, `isAutoAdjusted: true`) are baseline-pinned for parity — different settings produce different exit classifications, so any drift in the upstream defaults must be mirrored here.
 5. **Regenerate every reference-JS sidecar** with `node mcp/tests/fixtures/shots/harness/capture.js --all` from the repo root. This rewrites `<shot_id>.reference-js.json` for every `.slog` in `mcp/tests/fixtures/shots/`. Review the resulting git diff — non-trivial diffs are expected on a real algorithm change but should be inspected for plausibility before committing.
-6. **Run the parity test** with `uv run pytest mcp/tests/test_phase_end_stop_parity.py`. Fix any newly-surfaced port deltas in `shot_analyzer.py` until the test passes. If a genuinely-divergent float field needs a per-field tolerance entry, add it with an inline comment citing the JS source line or commit per the discipline rule in `lifecycle/port-ddsa-phaseendstop-algorithm-into-diagnose/spec.md` (R11).
-7. **Run the version-consistency test** with `uv run pytest mcp/tests/test_analyzer_version_consistency.py`. This catches leftover version-mismatch artifacts (vendored JS filename containing `v1.8.0` while `ANALYZER_JS_VERSION` says `v1.9.0`, or vice versa) before the PR opens.
+6. **Run the parity test** with `venv/bin/pytest mcp/tests/test_phase_end_stop_parity.py`. Fix any newly-surfaced port deltas in `shot_analyzer.py` until the test passes. If a genuinely-divergent float field needs a per-field tolerance entry, add it with an inline comment citing the JS source line or commit per the discipline rule in `lifecycle/port-ddsa-phaseendstop-algorithm-into-diagnose/spec.md` (R11).
+7. **Run the version-consistency test** with `venv/bin/pytest mcp/tests/test_analyzer_version_consistency.py`. This catches leftover version-mismatch artifacts (vendored JS filename containing `v1.8.0` while `ANALYZER_JS_VERSION` says `v1.9.0`, or vice versa) before the PR opens.
 
 Commit the version-bump constant, the renamed vendored JS files, and the regenerated `.reference-js.json` sidecars together in one cohesive change so reviewers can correlate the algorithmic delta against the parity-output delta.
 
@@ -35,10 +35,10 @@ Commit the version-bump constant, the renamed vendored JS files, and the regener
 To extend the regression and parity coverage with a new shot:
 
 1. **Drop the new `<shot_id>.slog`** into `mcp/tests/fixtures/shots/`. The shot ID matches the device-assigned ID; the `.slog` is the raw binary you'd otherwise pull via `refresh_fixtures --fetch`.
-2. **Regenerate the golden** with `python -m gaggimate_mcp.tools.refresh_fixtures <shot_id>`. This produces `<shot_id>.golden.json` from the binary, exercising the full transformer pipeline that `test_shot_regression.py` covers. (See `mcp/tests/fixtures/shots/README.md` for context on the byte-stability convention this golden adheres to.)
+2. **Regenerate the golden** with `venv/bin/python -m gaggimate_mcp.tools.refresh_fixtures <shot_id>`. This produces `<shot_id>.golden.json` from the binary, exercising the full transformer pipeline that `test_shot_regression.py` covers. (See `mcp/tests/fixtures/shots/README.md` for context on the byte-stability convention this golden adheres to.)
 3. **Capture the companion `<shot_id>.profile.json`** by fetching the device profile that produced the shot. With the device online, run `manage_profile(action="get", profile_id=...)` (the profile ID lives in the parsed shot's `profile_id` field) and save the returned JSON verbatim — do not reformat or re-serialize it. The profile sidecar is the second input the parity test feeds to `classify_phase_exits` / `estimate_auto_delay`.
 4. **Capture the reference-JS sidecar** with `node mcp/tests/fixtures/shots/harness/capture.js <shot_id>` (single-shot mode). This produces `<shot_id>.reference-js.json` — the canonical-serialized output of the vendored `calculateShotMetrics` against the new `.slog` + `.profile.json` inputs.
-5. **Confirm both suites pass** with `uv run pytest`. The regression test (`test_shot_regression.py`) picks up the new `.golden.json`; the parity test (`test_phase_end_stop_parity.py`) auto-parametrizes over the new `.slog` and asserts Python-vs-JS parity against the new sidecar.
+5. **Confirm both suites pass** with `venv/bin/pytest` (from the repo root). The regression test (`test_shot_regression.py`) picks up the new `.golden.json`; the parity test (`test_phase_end_stop_parity.py`) auto-parametrizes over the new `.slog` and asserts Python-vs-JS parity against the new sidecar.
 
 **Contributors without Node installed**: skip step 4. Open a draft PR with just the `.slog`, `.profile.json`, and `.golden.json` and tag a maintainer in the description; the maintainer regenerates the `.reference-js.json` locally and pushes it to your branch. The parity test will fail-loudly on missing sidecars (with a message naming the missing path and pointing back at this section) until the maintainer's commit lands — that's expected.
 

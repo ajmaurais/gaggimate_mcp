@@ -145,6 +145,7 @@ readOnlyPaths:
   # Build artifacts
   - "__pycache__/"
   - ".venv/"
+  - "venv/"
   - "node_modules/"
   - "dist/"
   - "build/"

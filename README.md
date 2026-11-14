@@ -25,7 +25,7 @@ Gaggimate Barista is a Claude Code project — not a standalone app, but a struc
 
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (requires Anthropic API key or Claude Pro/Max subscription)
 - A [Gaggimate](https://gaggimate.com/)-equipped espresso machine (Gaggia Classic Pro, Gaggia Classic Evo, or Rancilio Silvia)
-- [`uv`](https://docs.astral.sh/uv/) (Python package manager, for the MCP server)
+- Python 3.13+ (for the MCP server, installed into a project-local `./venv`)
 
 ## Setup
 
@@ -56,32 +56,35 @@ The script creates symlinks for `coffees/`, `grind-map.md`, and `user-setup.md`,
 
 ### 3. Install the MCP server
 
+Create a virtual environment at the project root and install the server (plus dev/test dependencies and `pyyaml`, which the Claude Code damage-control hooks need) into it:
+
 ```bash
-uv sync --directory mcp
+python3 -m venv venv
+venv/bin/pip install -e "./mcp[dev]" pyyaml
 ```
+
+All Python in this project (the MCP server, tests, and hooks) runs from `./venv`.
 
 ### 4. Configure the MCP server
 
-Create `.mcp.json` in the project root (gitignored). Replace the two paths with your actual locations (`which uv` and `pwd`):
+Create `.mcp.json` in the project root (gitignored). Replace `/absolute/path/to/gaggimate-barista` with your actual location (`pwd`):
 
 ```json
 {
   "mcpServers": {
     "gaggimate": {
       "type": "stdio",
-      "command": "/absolute/path/to/uv",
+      "command": "/bin/sh",
       "args": [
-        "run",
-        "--directory",
-        "/absolute/path/to/gaggimate-barista/mcp",
-        "mcp",
-        "run",
-        "src/gaggimate_mcp/server.py"
+        "-c",
+        "cd /absolute/path/to/gaggimate-barista/mcp && exec /absolute/path/to/gaggimate-barista/venv/bin/mcp run src/gaggimate_mcp/server.py"
       ]
     }
   }
 }
 ```
+
+The `cd` into `mcp/` matters: the server reads `mcp/.env` (including `GAGGIMATE_STORAGE_PATH`) relative to its working directory.
 
 ### 5. Configure Claude Code permissions
 
